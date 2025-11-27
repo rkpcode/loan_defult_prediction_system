@@ -3,80 +3,50 @@ import sys
 from src.loan_defult_prediction_system.exception import CustomException
 from src.loan_defult_prediction_system.logger import logging
 import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
-import yaml
-from pathlib import Path
+from src.loan_defult_prediction_system.utils import read_train_data
 
 @dataclass
 class DataIngestionConfig:
-    root_dir: Path
-    source_URL: str
-    local_data_file: Path
-    unzip_dir: Path
+    train_data_path: str = os.path.join("artifacts", "train.csv")
+    test_data_path: str = os.path.join("artifacts", "test.csv")
+    raw_data_path: str = os.path.join("artifacts", "raw_data.csv")
 
 class DataIngestion:
-    def __init__(self, config_filepath=Path("config/config.yaml")):
-        self.config_filepath = config_filepath
-        self.config = self.read_yaml_config()
-        self.ingestion_config = self.get_data_ingestion_config()
+    def __init__(self):
+        self.ingestion_config = DataIngestionConfig()
 
-    def read_yaml_config(self) -> dict:
+    def initiate_data_ingestion(self, file_path: str):
+        logging.info("Starting data ingestion process")
         try:
-            with open(self.config_filepath) as yaml_file:
-                content = yaml.safe_load(yaml_file)
-                logging.info(f"yaml file: {self.config_filepath} loaded successfully")
-                return content
-        except Exception as e:
-            raise CustomException(e, sys)
+            # Read the dataset from SQL
+            df = read_train_data()
+            logging.info("Dataset read successfully")
 
-    def get_data_ingestion_config(self) -> DataIngestionConfig:
-        config = self.config['data_ingestion']
-        
-        create_directories([config['root_dir']])
+            # Create artifacts directory
+            os.makedirs(os.path.dirname(self.ingestion_config.raw_data_path), exist_ok=True)
 
-        data_ingestion_config = DataIngestionConfig(
-            root_dir=Path(config['root_dir']),
-            source_URL=config['source_URL'],
-            local_data_file=Path(config['local_data_file']),
-            unzip_dir=Path(config['unzip_dir']) 
-        )
+            # Save raw data
+            df.to_csv(self.ingestion_config.raw_data_path, index=False, header=True)
+            logging.info(f"Raw data saved at {self.ingestion_config.raw_data_path}")
 
-        return data_ingestion_config
+            # --- Feature Engineering ---
+            
+            logging.info("Train test split initiated")
+            train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
 
-    def download_file(self):
-        try:
-            dataset_name = self.ingestion_config.source_URL
-            zip_download_dir = self.ingestion_config.root_dir
-            
-            os.makedirs(zip_download_dir, exist_ok=True)
-            
-            logging.info(f"Downloading data from {dataset_name} into {zip_download_dir}")
-            
-            # Using kaggle API to download dataset
-            os.system(f"kaggle datasets download -d {dataset_name} -p {zip_download_dir} --unzip")
-            
-            logging.info(f"Downloaded data from {dataset_name} into {zip_download_dir}")
+            logging.info("Data split into training and testing sets")
+
+            train_set.to_csv(self.ingestion_config.train_data_path, index=False)
+            test_set.to_csv(self.ingestion_config.test_data_path, index=False)
+
+            return (
+                self.ingestion_config.train_data_path,
+                self.ingestion_config.test_data_path,
+            )
 
         except Exception as e:
+            logging.error("Error occurred during data ingestion")
             raise CustomException(e, sys)
-
-    
-def create_directories(path_to_directories: list, verbose=True):
-    """create list of directories
-
-    Args:
-        path_to_directories (list): list of path of directories
-        ignore_log (bool, optional): ignore if multiple dirs is to be created. Defaults to False.
-    """
-    for path in path_to_directories:
-        os.makedirs(path, exist_ok=True)
-        if verbose:
-            logging.info(f"created directory at: {path}")
-
-if __name__ == "__main__":
-    try:
-        obj = DataIngestion()
-        obj.download_file()
-    except Exception as e:
-        logging.exception(e)
-        raise e
