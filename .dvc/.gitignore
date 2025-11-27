@@ -1,0 +1,9 @@
+/config.local
+/tmp
+/cache
+/artifacts/data_ingestion/train.csv
+/artifacts/data_ingestion/test.csv
+/artifacts/raw_data.csv 
+/artifacts/train.csv
+/artifacts/test.csv
+/artifacts/preprocessor.pkl
