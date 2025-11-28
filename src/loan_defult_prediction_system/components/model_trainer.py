@@ -49,17 +49,18 @@ class ModelTrainer:
                     'criterion': ['gini', 'entropy', 'log_loss'],
                 },
                 "Random Forest": {
-                    'n_estimators': [32, 64]
+                    'n_estimators': [128, 200]
                 },
                 "Gradient Boosting": {
                     'learning_rate': [.1, .01],
                     'subsample': [0.7, 0.8],
-                    'n_estimators': [32, 64]
+                    'n_estimators': [128, 200]
                 },
                 "Logistic Regression": {},
                 "XGBClassifier": {
                     'learning_rate': [.1, .01],
-                    'n_estimators': [32, 64]
+                    'n_estimators': [128, 200],
+                    'tree_method': ['gpu_hist']
                 },
                 "AdaBoost Classifier": {
                     'learning_rate': [.1, .01],

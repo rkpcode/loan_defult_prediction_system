@@ -3,7 +3,7 @@ import sys
 from src.loan_defult_prediction_system.exception import CustomException
 from src.loan_defult_prediction_system.logger import logging
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.metrics import accuracy_score
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -42,12 +42,12 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param):
 
             logging.info(f"Training model: {model_name}")
 
-            # Using GridSearchCV to find best parameters
-            gs = GridSearchCV(model, para, cv=3, n_jobs=-1, verbose=3)
-            gs.fit(X_train, y_train)
+            # Using RandomizedSearchCV to find best parameters
+            rs = RandomizedSearchCV(model, para, cv=3, n_iter=10, n_jobs=-1, verbose=3)
+            rs.fit(X_train, y_train)
 
             # Updating model with best params
-            model.set_params(**gs.best_params_)
+            model.set_params(**rs.best_params_)
             model.fit(X_train, y_train)
 
             # Predictions
