@@ -40,8 +40,10 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param):
             model = list(models.values())[i]
             para = param[model_name]
 
+            logging.info(f"Training model: {model_name}")
+
             # Using GridSearchCV to find best parameters
-            gs = GridSearchCV(model, para, cv=3)
+            gs = GridSearchCV(model, para, cv=3, n_jobs=-1, verbose=3)
             gs.fit(X_train, y_train)
 
             # Updating model with best params
@@ -55,6 +57,8 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param):
             # Using accuracy_score instead of r2_score for Classification
             train_model_score = accuracy_score(y_train, y_train_pred)
             test_model_score = accuracy_score(y_test, y_test_pred)
+
+            logging.info(f"Model: {model_name}, Train Score: {train_model_score}, Test Score: {test_model_score}")
 
             report[model_name] = test_model_score
 

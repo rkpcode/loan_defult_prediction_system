@@ -47,30 +47,22 @@ class ModelTrainer:
             params = {
                 "Decision Tree": {
                     'criterion': ['gini', 'entropy', 'log_loss'],
-                    # 'splitter': ['best', 'random'],
-                    # 'max_features': ['sqrt', 'log2'],
                 },
                 "Random Forest": {
-                    # 'criterion':['gini', 'entropy', 'log_loss'],
-                    # 'max_features':['sqrt','log2',None],
-                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                    'n_estimators': [32, 64, 128]
                 },
                 "Gradient Boosting": {
-                    # 'loss':['log_loss', 'exponential'],
-                    'learning_rate': [.1, .01, .05, .001],
-                    'subsample': [0.6, 0.7, 0.75, 0.8, 0.85, 0.9],
-                    # 'criterion':['squared_error', 'friedman_mse'],
-                    # 'max_features':['auto','sqrt','log2'],
-                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                    'learning_rate': [.1, .01, .05],
+                    'subsample': [0.6, 0.7, 0.8],
+                    'n_estimators': [32, 64, 128]
                 },
                 "Logistic Regression": {},
                 "XGBClassifier": {
-                    'learning_rate': [.1, .01, .05, .001],
-                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                    'learning_rate': [.1, .01, .05],
+                    'n_estimators': [32, 64, 128]
                 },
                 "AdaBoost Classifier": {
-                    'learning_rate': [.1, .01, .5, .001],
-                    # 'n_estimators': [8,16,32,64,128,256]
+                    'learning_rate': [.1, .01, .5],
                 }
             }
 
