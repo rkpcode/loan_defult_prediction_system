@@ -60,7 +60,7 @@ class ModelTrainer:
                 "XGBClassifier": {
                     'learning_rate': [.1, .01],
                     'n_estimators': [128, 200],
-                    'tree_method': ['gpu_hist']
+                    'tree_method': ['hist']
                 },
                 "AdaBoost Classifier": {
                     'learning_rate': [.1, .01],

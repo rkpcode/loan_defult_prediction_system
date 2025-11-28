@@ -36,7 +36,7 @@ class DataTransformation:
                 steps=[
                     ("imputer", SimpleImputer(strategy="most_frequent")),
                     ("one_hot_encoder", OneHotEncoder(sparse_output=False)),
-                    ("scaler", StandardScaler(with_mean=False))
+                    # ("scaler", StandardScaler(with_mean=False)) # Removed as per feedback
                 ]
             )
 
@@ -69,10 +69,11 @@ class DataTransformation:
             target_column_name = "loan_paid_back"
             numerical_columns = ['annual_income', 'debt_to_income_ratio', 'credit_score', 'loan_amount', 'interest_rate']
 
-            input_feature_train_df = train_df.drop(columns=[target_column_name, 'id'], axis=1)
+            # Drop 'id' if it exists, ignore if not
+            input_feature_train_df = train_df.drop(columns=[target_column_name, 'id'], axis=1, errors='ignore')
             target_feature_train_df = train_df[target_column_name]
 
-            input_feature_test_df = test_df.drop(columns=[target_column_name, 'id'], axis=1)
+            input_feature_test_df = test_df.drop(columns=[target_column_name, 'id'], axis=1, errors='ignore')
             target_feature_test_df = test_df[target_column_name]
 
             logging.info(f"Applying preprocessing object on training dataframe and testing dataframe.")
