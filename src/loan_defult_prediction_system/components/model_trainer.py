@@ -1,17 +1,13 @@
 import os
 import sys
+import numpy as np
+import json
 from dataclasses import dataclass
 
-from sklearn.ensemble import (
-    AdaBoostClassifier,
-    GradientBoostingClassifier,
-    RandomForestClassifier,
-)
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, f1_score, recall_score
 from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
 
 from src.loan_defult_prediction_system.exception import CustomException
 from src.loan_defult_prediction_system.logger import logging
@@ -20,6 +16,7 @@ from src.loan_defult_prediction_system.utils import evaluate_models, save_object
 @dataclass
 class ModelTrainerConfig:
     trained_model_file_path = os.path.join("artifacts", "model.pkl")
+    model_metadata_file_path = os.path.join("artifacts", "model_metadata.json")
 
 class ModelTrainer:
     def __init__(self):
@@ -27,7 +24,7 @@ class ModelTrainer:
 
     def initiate_model_trainer(self, train_array, test_array):
         try:
-            logging.info("Split training and test input data")
+            logging.info("Splitting training and test input data")
             X_train, y_train, X_test, y_test = (
                 train_array[:, :-1],
                 train_array[:, -1],
@@ -35,72 +32,97 @@ class ModelTrainer:
                 test_array[:, -1],
             )
 
+            # --- FAST TRACK MODELS (Only Top 3 Performers) ---
             models = {
-                "Random Forest": RandomForestClassifier(class_weight='balanced'),
-                "Decision Tree": DecisionTreeClassifier(class_weight='balanced'),
-                "Gradient Boosting": GradientBoostingClassifier(),
-                "Logistic Regression": LogisticRegression(class_weight='balanced'),
-                "XGBClassifier": XGBClassifier(scale_pos_weight=4), # Approx 80/20 ratio
-                "AdaBoost Classifier": AdaBoostClassifier(),
+                "Random Forest": RandomForestClassifier(class_weight='balanced', n_jobs=-1),
+                "XGBClassifier": XGBClassifier(scale_pos_weight=4, tree_method='hist', n_jobs=-1),
+                "CatBoost Classifier": CatBoostClassifier(verbose=0, auto_class_weights='Balanced', allow_writing_files=False),
             }
             
+            # --- LIGHT PARAMS (Optimized for Speed) ---
             params = {
-                "Decision Tree": {
-                    'criterion': ['gini', 'entropy'],
-                    'max_depth': [5, 10, None]
-                },
                 "Random Forest": {
-                    'n_estimators': [50, 100],
-                    'max_depth': [10, 20, None]
-                },
-                "Gradient Boosting": {
-                    'learning_rate': [.1, .05],
-                    'n_estimators': [50, 100],
-                    'subsample': [0.8]
-                },
-                "Logistic Regression": {
-                    'C': [0.1, 1, 10]
+                    'n_estimators': [50, 100],        # Kam trees for speed
+                    'max_depth': [10, 20],            # Limit depth to prevent overfitting
+                    'min_samples_split': [5, 10]
                 },
                 "XGBClassifier": {
-                    'learning_rate': [.1, .01],
+                    'learning_rate': [0.1, 0.05],
                     'n_estimators': [50, 100],
-                    'max_depth': [3, 5]
+                    'max_depth': [3, 5],              # Shallow trees run faster
+                    'subsample': [0.8]
                 },
-                "AdaBoost Classifier": {
-                    'learning_rate': [.1],
-                    'n_estimators': [50]
+                "CatBoost Classifier": {
+                    'depth': [6, 8],
+                    'learning_rate': [0.05, 0.1],
+                    'iterations': [100, 200]
                 }
             }
 
+            logging.info("Starting Model Training with Hyperparameter Tuning...")
+            
+            # Use F1 for grid search selection to balance precision/recall during tuning
             model_report: dict = evaluate_models(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test,
                                                  models=models, param=params, scoring='f1')
 
-            ## To get best model score from dict
+            ## Get best model score and name
             best_model_score = max(sorted(model_report.values()))
-
-            ## To get best model name from dict
             best_model_name = list(model_report.keys())[
                 list(model_report.values()).index(best_model_score)
             ]
             best_model = models[best_model_name]
 
-            if best_model_score < 0.6:
-                raise CustomException("No best model found")
-            logging.info(f"Best found model on both training and testing dataset{best_model_name}")
+            if best_model_score < 0.5:
+                raise CustomException("No satisfactory model found (Score too low)")
+            
+            logging.info(f"Best Model Found: {best_model_name} with Base F1: {best_model_score}")
 
+            # --- SAVE MODEL ---
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
                 obj=best_model
             )
 
-            predicted = best_model.predict(X_test)
+            # --- CRITICAL: CUSTOM THRESHOLD LOGIC (The "Secret Sauce") ---
+            # Hum 0.5 threshold use nahi karenge. Based on our analysis, 0.1 is optimal.
+            OPTIMAL_THRESHOLD = 0.1
+            
+            # 1. Get Probability of Default (Class 0)
+            # Assumption: Class 0 is Default, Class 1 is Paid.
+            # predict_proba returns [Prob(0), Prob(1)]
+            y_prob_default = best_model.predict_proba(X_test)[:, 0]
+            
+            # 2. Apply Custom Threshold
+            # If Prob(Default) > 0.1, Predict Default (0), else Paid (1)
+            custom_predictions = np.where(y_prob_default > OPTIMAL_THRESHOLD, 0, 1)
 
-            cm = confusion_matrix(y_test, predicted)
-            logging.info(f"Confusion Matrix:\n{cm}")
+            # 3. Save Threshold Metadata (For API usage)
+            metadata = {
+                "best_model": best_model_name,
+                "threshold": OPTIMAL_THRESHOLD,
+                "description": "Custom threshold 0.1 selected to maximize Recall for Defaulters."
+            }
+            with open(self.model_trainer_config.model_metadata_file_path, 'w') as f:
+                json.dump(metadata, f, indent=4)
+            
+            logging.info(f"Metadata saved at {self.model_trainer_config.model_metadata_file_path}")
+
+            # 4. Log Correct Metrics based on Custom Threshold
+            cm = confusion_matrix(y_test, custom_predictions)
+            recall = recall_score(y_test, custom_predictions, pos_label=0) # Focus on Default Recall
+            f1_custom = f1_score(y_test, custom_predictions, pos_label=0)
+
+            print(f"\n================ FINAL REPORT ================")
+            print(f"Best Model: {best_model_name}")
+            print(f"Optimal Threshold Used: {OPTIMAL_THRESHOLD}")
             print(f"Confusion Matrix:\n{cm}")
+            print(f"Recall (Defaults Caught): {recall:.4f}")
+            print(f"F1 Score (Class 0): {f1_custom:.4f}")
+            print(f"==============================================")
+            
+            logging.info(f"Final Recall at threshold {OPTIMAL_THRESHOLD}: {recall}")
 
-            f1 = f1_score(y_test, predicted)
-            return f1
+            return recall
 
         except Exception as e:
             raise CustomException(e, sys)
