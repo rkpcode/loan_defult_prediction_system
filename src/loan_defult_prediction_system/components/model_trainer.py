@@ -8,7 +8,7 @@ from sklearn.ensemble import (
     RandomForestClassifier,
 )
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
@@ -36,39 +36,44 @@ class ModelTrainer:
             )
 
             models = {
-                "Random Forest": RandomForestClassifier(),
-                "Decision Tree": DecisionTreeClassifier(),
+                "Random Forest": RandomForestClassifier(class_weight='balanced'),
+                "Decision Tree": DecisionTreeClassifier(class_weight='balanced'),
                 "Gradient Boosting": GradientBoostingClassifier(),
-                "Logistic Regression": LogisticRegression(),
-                "XGBClassifier": XGBClassifier(),
+                "Logistic Regression": LogisticRegression(class_weight='balanced'),
+                "XGBClassifier": XGBClassifier(scale_pos_weight=4), # Approx 80/20 ratio
                 "AdaBoost Classifier": AdaBoostClassifier(),
             }
             
             params = {
                 "Decision Tree": {
-                    'criterion': ['gini', 'entropy', 'log_loss'],
+                    'criterion': ['gini', 'entropy'],
+                    'max_depth': [5, 10, None]
                 },
                 "Random Forest": {
-                    'n_estimators': [128, 200]
+                    'n_estimators': [50, 100],
+                    'max_depth': [10, 20, None]
                 },
                 "Gradient Boosting": {
-                    'learning_rate': [.1, .01],
-                    'subsample': [0.7, 0.8],
-                    'n_estimators': [128, 200]
+                    'learning_rate': [.1, .05],
+                    'n_estimators': [50, 100],
+                    'subsample': [0.8]
                 },
-                "Logistic Regression": {},
+                "Logistic Regression": {
+                    'C': [0.1, 1, 10]
+                },
                 "XGBClassifier": {
                     'learning_rate': [.1, .01],
-                    'n_estimators': [128, 200],
-                    'tree_method': ['hist']
+                    'n_estimators': [50, 100],
+                    'max_depth': [3, 5]
                 },
                 "AdaBoost Classifier": {
-                    'learning_rate': [.1, .01],
+                    'learning_rate': [.1],
+                    'n_estimators': [50]
                 }
             }
 
             model_report: dict = evaluate_models(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test,
-                                                 models=models, param=params)
+                                                 models=models, param=params, scoring='f1')
 
             ## To get best model score from dict
             best_model_score = max(sorted(model_report.values()))
@@ -81,7 +86,7 @@ class ModelTrainer:
 
             if best_model_score < 0.6:
                 raise CustomException("No best model found")
-            logging.info(f"Best found model on both training and testing dataset")
+            logging.info(f"Best found model on both training and testing dataset{best_model_name}")
 
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
@@ -90,8 +95,12 @@ class ModelTrainer:
 
             predicted = best_model.predict(X_test)
 
-            accuracy = accuracy_score(y_test, predicted)
-            return accuracy
+            cm = confusion_matrix(y_test, predicted)
+            logging.info(f"Confusion Matrix:\n{cm}")
+            print(f"Confusion Matrix:\n{cm}")
+
+            f1 = f1_score(y_test, predicted)
+            return f1
 
         except Exception as e:
             raise CustomException(e, sys)

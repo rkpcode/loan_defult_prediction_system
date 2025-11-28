@@ -16,8 +16,20 @@ class PredictPipeline:
             model = load_object(file_path=model_path)
             preprocessor = load_object(file_path=preprocessor_path)
             print("After Loading")
+            print("After Loading")
             data_scaled = preprocessor.transform(features)
-            preds = model.predict(data_scaled)
+            
+            # Use predict_proba for custom threshold
+            # Class 0 is Default, Class 1 is Paid Back
+            # We want to catch Defaults (Class 0)
+            probs = model.predict_proba(data_scaled)
+            
+            # Assuming classes are [0, 1], probs[:, 0] is probability of Default
+            prob_default = probs[:, 0]
+            
+            # Threshold 0.1: If > 10% chance of default, flag as Default (0)
+            preds = [0 if p > 0.1 else 1 for p in prob_default]
+            
             return preds
         
         except Exception as e:

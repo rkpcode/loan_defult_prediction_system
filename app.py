@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_file
+import os
 import numpy as np
 import pandas as pd
 from src.loan_defult_prediction_system.pipelines.prediction_pipeline import CustomData, PredictPipeline
@@ -37,9 +38,9 @@ def predict_datapoint():
         results = predict_pipeline.predict(pred_df)
         print("after Prediction")
         
-        # Convert prediction to readable format (e.g., 1 -> Default, 0 -> Paid Back)
-        # Assuming 1 is Default and 0 is Paid Back based on typical loan datasets
-        prediction_label = "Loan Default" if results[0] == 1 else "Loan Paid Back"
+        # Convert prediction to readable format
+        # 0 = Default, 1 = Paid Back
+        prediction_label = "Loan Default" if results[0] == 0 else "Loan Paid Back"
         
         return render_template('home.html', results=prediction_label)
 
@@ -72,16 +73,28 @@ def upload_file():
                 results = predict_pipeline.predict(df)
                 
                 df['loan_paid_back'] = results
+                # 1 = Paid Back (Give Loan: YES), 0 = Default (Give Loan: NO)
                 df['Give_Loan'] = df['loan_paid_back'].apply(lambda x: "YES" if x == 1 else "NO")
                 
+                # Save the results to a CSV file for download
+                output_file = os.path.join('artifacts', 'prediction_results.csv')
+                os.makedirs('artifacts', exist_ok=True)
+                df.to_csv(output_file, index=False)
+
                 # Show first few rows
                 return render_template('upload.html', 
                                      prediction_text="File uploaded and processed successfully!", 
-                                     tables=[df.head().to_html(classes='table table-striped', header="true")])
+                                     tables=[df.head().to_html(classes='table table-striped', header="true")],
+                                     show_download=True)
             except Exception as e:
                 return render_template('upload.html', prediction_text=f"Error during prediction: {str(e)}")
                 
     return render_template('upload.html')
+
+@app.route('/download')
+def download_file():
+    path = os.path.join('artifacts', 'prediction_results.csv')
+    return send_file(path, as_attachment=True, download_name='prediction_results.csv')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

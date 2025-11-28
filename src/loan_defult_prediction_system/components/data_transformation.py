@@ -22,7 +22,7 @@ class DataTransformation:
 
     def get_data_transformer_object(self):
         try:
-            numerical_columns = ['annual_income', 'debt_to_income_ratio', 'credit_score', 'loan_amount', 'interest_rate']
+            numerical_columns = ['annual_income', 'debt_to_income_ratio', 'credit_score', 'loan_amount', 'interest_rate', 'income_to_loan_ratio', 'total_debt']
             categorical_columns = ['gender', 'marital_status', 'education_level', 'employment_status', 'loan_purpose', 'grade_subgrade']
 
             num_pipeline = Pipeline(
@@ -62,12 +62,23 @@ class DataTransformation:
 
             logging.info("Read train and test data completed")
 
+            logging.info("Feature Engineering Started")
+            # Feature Engineering
+            # 1. Income to Loan Ratio
+            train_df['income_to_loan_ratio'] = train_df['annual_income'] / train_df['loan_amount']
+            test_df['income_to_loan_ratio'] = test_df['annual_income'] / test_df['loan_amount']
+
+            # 2. Total Debt (Approximation)
+            train_df['total_debt'] = train_df['debt_to_income_ratio'] * train_df['annual_income']
+            test_df['total_debt'] = test_df['debt_to_income_ratio'] * test_df['annual_income']
+            logging.info("Feature Engineering Completed")
+
             logging.info("Obtaining preprocessing object")
 
             preprocessing_obj = self.get_data_transformer_object()
 
             target_column_name = "loan_paid_back"
-            numerical_columns = ['annual_income', 'debt_to_income_ratio', 'credit_score', 'loan_amount', 'interest_rate']
+            numerical_columns = ['annual_income', 'debt_to_income_ratio', 'credit_score', 'loan_amount', 'interest_rate', 'income_to_loan_ratio', 'total_debt']
 
             # Drop 'id' if it exists, ignore if not
             input_feature_train_df = train_df.drop(columns=[target_column_name, 'id'], axis=1, errors='ignore')
