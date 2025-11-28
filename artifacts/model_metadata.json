@@ -1,0 +1,5 @@
+{
+    "best_model": "Random Forest",
+    "threshold": 0.1,
+    "description": "Custom threshold 0.1 selected to maximize Recall for Defaulters."
+}
