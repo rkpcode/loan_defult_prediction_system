@@ -4,6 +4,8 @@ import pandas as pd
 from src.loan_defult_prediction_system.exception import CustomException
 from src.loan_defult_prediction_system.utils import load_object
 
+import json
+
 class PredictPipeline:
     def __init__(self):
         pass
@@ -12,11 +14,27 @@ class PredictPipeline:
         try:
             model_path = os.path.join("artifacts", "model.pkl")
             preprocessor_path = os.path.join('artifacts', 'preprocessor.pkl')
+            metadata_path = os.path.join("artifacts", "model_metadata.json")
+
             print("Before Loading")
             model = load_object(file_path=model_path)
             preprocessor = load_object(file_path=preprocessor_path)
+            
+            # Load Metadata for Threshold
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+            threshold = metadata.get("threshold", 0.1) # Default to 0.1 if not found
+            
+            print(f"Loaded Threshold: {threshold}")
             print("After Loading")
-            print("After Loading")
+
+            # --- FEATURE ENGINEERING (Must match Training) ---
+            # 1. Income to Loan Ratio
+            features['income_to_loan_ratio'] = features['annual_income'] / features['loan_amount']
+            
+            # 2. Total Debt (Approximation)
+            features['total_debt'] = features['debt_to_income_ratio'] * features['annual_income']
+            
             data_scaled = preprocessor.transform(features)
             
             # Use predict_proba for custom threshold
@@ -27,8 +45,8 @@ class PredictPipeline:
             # Assuming classes are [0, 1], probs[:, 0] is probability of Default
             prob_default = probs[:, 0]
             
-            # Threshold 0.1: If > 10% chance of default, flag as Default (0)
-            preds = [0 if p > 0.1 else 1 for p in prob_default]
+            # Apply Custom Threshold
+            preds = [0 if p > threshold else 1 for p in prob_default]
             
             return preds
         

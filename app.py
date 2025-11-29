@@ -47,28 +47,17 @@ def predict_datapoint():
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        file = request.files['file']
-        if file and file.filename.endswith('.csv'):
-            df = pd.read_csv(file)
-            
-            # Predict for the uploaded CSV
-            predict_pipeline = PredictPipeline()
-            
-            # Ensure the CSV has the required columns
-            # In a real scenario, we might need to map columns or handle missing ones
-            # For now, assuming the CSV structure matches the training data input features
-            
-            # We might need to preprocess or select specific columns if the CSV has extra data
-            # Assuming the CSV has the raw features expected by the pipeline
-            
-            try:
-                # We need to handle potential column mismatches or ID columns
-                # For simplicity, let's try passing the dataframe directly if it matches
-                # However, the pipeline expects specific columns. 
-                # Let's assume the user uploads a CSV with the same columns as the manual input
+        try:
+            file = request.files['file']
+            if file and file.filename.endswith('.csv'):
+                df = pd.read_csv(file)
                 
-                # If the CSV has an 'id' or 'loan_paid_back' column, we might want to drop it or ignore it
-                # The preprocessor handles the transformation, so we just need to pass the dataframe
+                # Predict for the uploaded CSV
+                predict_pipeline = PredictPipeline()
+                
+                # Ensure the CSV has the required columns
+                # In a real scenario, we might need to map columns or handle missing ones
+                # For now, assuming the CSV structure matches the training data input features
                 
                 results = predict_pipeline.predict(df)
                 
@@ -84,10 +73,13 @@ def upload_file():
                 # Show first few rows
                 return render_template('upload.html', 
                                      prediction_text="File uploaded and processed successfully!", 
-                                     tables=[df.head().to_html(classes='table table-striped', header="true")],
+                                     tables=df.head().to_html(classes='table table-striped', header="true"),
                                      show_download=True)
-            except Exception as e:
-                return render_template('upload.html', prediction_text=f"Error during prediction: {str(e)}")
+            else:
+                return render_template('upload.html', prediction_text="Please upload a valid CSV file.")
+        
+        except Exception as e:
+            return render_template('upload.html', prediction_text=f"Error during prediction: {str(e)}")
                 
     return render_template('upload.html')
 

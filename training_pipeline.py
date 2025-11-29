@@ -14,7 +14,7 @@ if __name__ == "__main__":
         # 1. Data Ingestion
         logging.info("Step 1: Data Ingestion")
         obj = DataIngestion()
-        train_data_path, test_data_path = obj.initiate_data_ingestion("raw_data_path_argument_is_ignored_internally")
+        train_data_path, test_data_path = obj.initiate_data_ingestion(sample_size=100)
         print(f"Data Ingestion Completed. Train path: {train_data_path}, Test path: {test_data_path}")
 
 

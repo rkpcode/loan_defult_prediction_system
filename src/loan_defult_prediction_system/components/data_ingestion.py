@@ -18,16 +18,18 @@ class DataIngestion:
     def __init__(self):
         self.ingestion_config = DataIngestionConfig()
 
-    def initiate_data_ingestion(self, file_path: str, sample_size: int = None):
+    def initiate_data_ingestion(self, file_path: str = None, sample_size: int = None):
+        """
+        Initiate data ingestion process
+        Args:
+            file_path: Deprecated, kept for backward compatibility
+            sample_size: If provided, sample N rows for testing (default: None = use full dataset)
+        """
         logging.info("Starting data ingestion process")
         try:
-            # Read the dataset from SQL
-            df = read_train_data()
-            logging.info("Dataset read successfully")
-            
-            if sample_size:
-                logging.info(f"Sampling {sample_size} records from the dataset")
-                df = df.sample(n=sample_size, random_state=42)
+            # Read the dataset (full or sampled)
+            df = read_train_data(sample_size=sample_size)
+            logging.info(f"Dataset read successfully: {len(df)} rows")
 
             # Create artifacts directory
             os.makedirs(os.path.dirname(self.ingestion_config.raw_data_path), exist_ok=True)

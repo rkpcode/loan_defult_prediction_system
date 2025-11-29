@@ -32,30 +32,64 @@ class ModelTrainer:
                 test_array[:, -1],
             )
 
-            # --- FAST TRACK MODELS (Only Top 3 Performers) ---
+            # --- GPU-OPTIMIZED MODELS (Enhanced for Accuracy & Class Imbalance) ---
+            # Calculate actual class weights for better imbalance handling
+            from sklearn.utils.class_weight import compute_class_weight
+            class_weights = compute_class_weight('balanced', 
+                                                 classes=np.unique(y_train), 
+                                                 y=y_train)
+            scale_pos_weight = class_weights[0] / class_weights[1]
+            
+            logging.info(f"Calculated scale_pos_weight: {scale_pos_weight:.2f}")
+            
             models = {
-                "Random Forest": RandomForestClassifier(class_weight='balanced', n_jobs=-1),
-                "XGBClassifier": XGBClassifier(scale_pos_weight=4, tree_method='hist', n_jobs=-1),
-                "CatBoost Classifier": CatBoostClassifier(verbose=0, auto_class_weights='Balanced', allow_writing_files=False),
+                "Random Forest": RandomForestClassifier(
+                    class_weight='balanced',
+                    n_jobs=-1,
+                    random_state=42,
+                    max_features='sqrt'
+                ),
+                "XGBClassifier": XGBClassifier(
+                    tree_method='gpu_hist',      # GPU acceleration
+                    device='cuda:0',             # GPU device (XGBoost 3.1+)
+                    scale_pos_weight=scale_pos_weight,  # Dynamic class weight
+                    n_jobs=-1,
+                    random_state=42
+                ),
+                "CatBoost Classifier": CatBoostClassifier(
+                    task_type='GPU',             # Explicit GPU usage
+                    devices='0',                 # GPU device
+                    auto_class_weights='Balanced',
+                    verbose=0,
+                    random_state=42,
+                    allow_writing_files=False
+                ),
             }
             
-            # --- LIGHT PARAMS (Optimized for Speed) ---
+            # --- EXPANDED HYPERPARAMETERS (Optimized for 30-60 min training) ---
             params = {
                 "Random Forest": {
-                    'n_estimators': [50, 100],        # Kam trees for speed
-                    'max_depth': [10, 20],            # Limit depth to prevent overfitting
-                    'min_samples_split': [5, 10]
+                    'n_estimators': [100, 200, 300],
+                    'max_depth': [10, 20, 30, None],
+                    'min_samples_split': [2, 5, 10],
+                    'min_samples_leaf': [1, 2, 4],
+                    'max_features': ['sqrt', 'log2']
                 },
                 "XGBClassifier": {
-                    'learning_rate': [0.1, 0.05],
-                    'n_estimators': [50, 100],
-                    'max_depth': [3, 5],              # Shallow trees run faster
-                    'subsample': [0.8]
+                    'learning_rate': [0.01, 0.05, 0.1],
+                    'n_estimators': [100, 200, 300],
+                    'max_depth': [3, 5, 7, 10],
+                    'min_child_weight': [1, 3, 5],
+                    'subsample': [0.7, 0.8, 0.9],
+                    'colsample_bytree': [0.7, 0.8, 0.9],
+                    'gamma': [0, 0.1, 0.2]
                 },
                 "CatBoost Classifier": {
-                    'depth': [6, 8],
-                    'learning_rate': [0.05, 0.1],
-                    'iterations': [100, 200]
+                    'depth': [4, 6, 8, 10],
+                    'learning_rate': [0.01, 0.03, 0.05, 0.1],
+                    'iterations': [200, 300, 500],
+                    'l2_leaf_reg': [1, 3, 5, 7],
+                    'border_count': [32, 64, 128]
                 }
             }
 
