@@ -84,13 +84,16 @@ class ModelTrainer:
                     'colsample_bytree': [0.7, 0.8, 0.9],
                     'gamma': [0, 0.1, 0.2]
                 },
+                # model_trainer.py - Simpler CatBoost params:
                 "CatBoost Classifier": {
-                    'depth': [4, 6, 8, 10],
-                    'learning_rate': [0.01, 0.03, 0.05, 0.1],
-                    'iterations': [200, 300, 500],
-                    'l2_leaf_reg': [1, 3, 5, 7],
-                    'border_count': [32, 64, 128]
-                }
+                    'depth': [4, 6],              # Remove 8, 10
+                    'learning_rate': [0.05, 0.1], # Remove 0.01, 0.03
+                    'iterations': [200, 300],     # Remove 500
+                    'l2_leaf_reg': [1, 3],        # Remove 5, 7
+                    'border_count': [32, 64]      # Remove 128
+               }
+               # This will reduce from 576 to 32 combinations
+               # Time: ~2-3 minutes instead of 15-20 minutes
             }
 
             logging.info("Starting Model Training with Hyperparameter Tuning...")
