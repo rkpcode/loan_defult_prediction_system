@@ -66,34 +66,28 @@ class ModelTrainer:
                 ),
             }
             
-            # --- EXPANDED HYPERPARAMETERS (Optimized for 30-60 min training) ---
+           # --- REAL FAST PARAMS (For 30 min run) ---
             params = {
                 "Random Forest": {
-                    'n_estimators': [100, 200, 300],
-                    'max_depth': [10, 20, 30, None],
-                    'min_samples_split': [2, 5, 10],
-                    'min_samples_leaf': [1, 2, 4],
-                    'max_features': ['sqrt', 'log2']
+                    'n_estimators': [100],        # Sirf 100 check karo
+                    'max_depth': [10, 20],        # Deep trees slow hote hain
+                    'min_samples_split': [5],     # Ek value kaafi hai
+                    'max_features': ['sqrt']      # Log2 hata diya
                 },
                 "XGBClassifier": {
-                    'learning_rate': [0.01, 0.05, 0.1],
-                    'n_estimators': [100, 200, 300],
-                    'max_depth': [3, 5, 7, 10],
-                    'min_child_weight': [1, 3, 5],
-                    'subsample': [0.7, 0.8, 0.9],
-                    'colsample_bytree': [0.7, 0.8, 0.9],
-                    'gamma': [0, 0.1, 0.2]
+                    'learning_rate': [0.1],       # Standard rate
+                    'n_estimators': [100, 200],   # 300 hata diya
+                    'max_depth': [3, 5],          # Depth 7, 10 bahut slow hain
+                    'subsample': [0.8],           # Fixed
+                    'colsample_bytree': [0.8],    # Fixed
+                    'gamma': [0]                  # Fixed
                 },
-                # model_trainer.py - Simpler CatBoost params:
                 "CatBoost Classifier": {
-                    'depth': [4, 6],              # Remove 8, 10
-                    'learning_rate': [0.05, 0.1], # Remove 0.01, 0.03
-                    'iterations': [200, 300],     # Remove 500
-                    'l2_leaf_reg': [1, 3],        # Remove 5, 7
-                    'border_count': [32, 64]      # Remove 128
+                    'depth': [6],
+                    'learning_rate': [0.1],
+                    'iterations': [200],
+                    'border_count': [32]
                }
-               # This will reduce from 576 to 32 combinations
-               # Time: ~2-3 minutes instead of 15-20 minutes
             }
 
             logging.info("Starting Model Training with Hyperparameter Tuning...")
