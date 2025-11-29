@@ -50,8 +50,8 @@ class ModelTrainer:
                     max_features='sqrt'
                 ),
                 "XGBClassifier": XGBClassifier(
-                    tree_method='gpu_hist',      # GPU acceleration
-                    device='cuda:0',             # GPU device (XGBoost 3.1+)
+                    tree_method='hist',          # Histogram-based (GPU auto-detected with device param)
+                    device='cuda:0',             # GPU device (XGBoost 2.0+)
                     scale_pos_weight=scale_pos_weight,  # Dynamic class weight
                     n_jobs=-1,
                     random_state=42
