@@ -131,7 +131,7 @@ class ModelTrainer:
             metadata = {
                 "best_model": best_model_name,
                 "threshold": OPTIMAL_THRESHOLD,
-                "description": "Custom threshold 0.1 selected to maximize Recall for Defaulters."
+                "description": "Custom threshold 0.25 selected to maximize Recall for Defaulters."
             }
             with open(self.model_trainer_config.model_metadata_file_path, 'w') as f:
                 json.dump(metadata, f, indent=4)
