@@ -70,12 +70,12 @@ class ModelTrainer:
             
            # --- REAL FAST PARAMS (For 30 min run) ---
             params = {
-                #"Random Forest": {
-                #    'n_estimators': [100],        # Sirf 100 check karo
-                #    'max_depth': [10, 20],        # Deep trees slow hote hain
-                #    'min_samples_split': [5],     # Ek value kaafi hai
-                #    'max_features': ['sqrt']      # Log2 hata diya
-                #},
+                "Random Forest": {
+                    'n_estimators': [100],        # Sirf 100 check karo
+                    'max_depth': [10, 20],        # Deep trees slow hote hain
+                    'min_samples_split': [5],     # Ek value kaafi hai
+                    'max_features': ['sqrt']      # Log2 hata diya
+                },
                 "XGBClassifier": {
                     'learning_rate': [0.1],       # Standard rate
                     'n_estimators': [300,500],   # 300 hata diya
