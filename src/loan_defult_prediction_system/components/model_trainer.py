@@ -77,7 +77,7 @@ class ModelTrainer:
                 "XGBClassifier": {
                     'learning_rate': [0.1],       # Standard rate
                     'n_estimators': [100, 200],   # 300 hata diya
-                    'max_depth': [3, 5],          # Depth 7, 10 bahut slow hain
+                    'max_depth': [7],          
                     'subsample': [0.8],           # Fixed
                     'colsample_bytree': [0.8],    # Fixed
                     'gamma': [0]                  # Fixed
