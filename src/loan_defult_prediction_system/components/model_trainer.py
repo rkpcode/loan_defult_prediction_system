@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix, f1_score, recall_score
+from sklearn.metrics import confusion_matrix, f1_score, recall_score, roc_auc_score
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 
@@ -72,7 +72,7 @@ class ModelTrainer:
             params = {
                 "Random Forest": {
                     'n_estimators': [100],        # Sirf 100 check karo
-                    'max_depth': [10, 20],        # Deep trees slow hote hain
+                    'max_depth': [10,15 ],        # Deep trees slow hote hain
                     'min_samples_split': [5],     # Ek value kaafi hai
                     'max_features': ['sqrt']      # Log2 hata diya
                 },
@@ -83,21 +83,15 @@ class ModelTrainer:
                     'subsample': [0.7,0.8],           # overfitting rokne
                     'colsample_bytree': [0.7,0.8],    # overfitting control
                     'gamma': [0]                  # Fixed
-                },
-                "CatBoost Classifier": {
-                    'depth': [6,8,10],
-                    'learning_rate': [0.05,0.1],
-                    'iterations': [500,800],
-                    'border_count': [32],
-                    'l2_leaf_reg': [1, 3, 5] #Regulariziation
-               }
+                }
+                
             }
 
             logging.info("Starting Model Training with Hyperparameter Tuning...")
             
-            # Use F1 for grid search selection to balance precision/recall during tuning
+            # Use ROC AUC for grid search selection (competition evaluation metric)
             model_report: dict = evaluate_models(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test,
-                                                 models=models, param=params, scoring='f1')
+                                                 models=models, param=params, scoring='roc_auc')
 
             ## Get best model score and name
             best_model_score = max(sorted(model_report.values()))
@@ -109,7 +103,7 @@ class ModelTrainer:
             if best_model_score < 0.5:
                 raise CustomException("No satisfactory model found (Score too low)")
             
-            logging.info(f"Best Model Found: {best_model_name} with Base F1: {best_model_score}")
+            logging.info(f"Best Model Found: {best_model_name} with ROC AUC: {best_model_score:.4f}")
 
             # --- SAVE MODEL ---
             save_object(
@@ -145,18 +139,23 @@ class ModelTrainer:
             cm = confusion_matrix(y_test, custom_predictions)
             recall = recall_score(y_test, custom_predictions, pos_label=0) # Focus on Default Recall
             f1_custom = f1_score(y_test, custom_predictions, pos_label=0)
+            
+            # Calculate ROC AUC using predicted probabilities (primary evaluation metric)
+            roc_auc = roc_auc_score(y_test, y_prob_default)
 
             print(f"\n================ FINAL REPORT ================")
             print(f"Best Model: {best_model_name}")
+            print(f"ROC AUC Score: {roc_auc:.4f}")
             print(f"Optimal Threshold Used: {OPTIMAL_THRESHOLD}")
             print(f"Confusion Matrix:\n{cm}")
             print(f"Recall (Defaults Caught): {recall:.4f}")
             print(f"F1 Score (Class 0): {f1_custom:.4f}")
             print(f"==============================================")
             
+            logging.info(f"ROC AUC Score: {roc_auc:.4f}")
             logging.info(f"Final Recall at threshold {OPTIMAL_THRESHOLD}: {recall}")
 
-            return recall
+            return roc_auc
 
         except Exception as e:
             raise CustomException(e, sys)
