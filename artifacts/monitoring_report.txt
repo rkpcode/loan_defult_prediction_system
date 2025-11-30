@@ -1,1 +1,71 @@
 Model Monitoring Report: No issues detected.
+Data loaded from: artifacts/data_ingestion/train.csv
+Dataset size: 593994 rows
+   id  annual_income  ...  grade_subgrade  loan_paid_back
+0   0       29367.99  ...              C3             1.0
+1   1       22108.02  ...              D3             0.0
+2   2       49566.20  ...              C5             1.0
+3   3       46858.25  ...              F1             1.0
+4   4       25496.70  ...              D1             1.0
+
+[5 rows x 13 columns]
+Data Ingestion Completed. Train path: artifacts/train.csv, Test path: artifacts/test.csv
+Data Transformation Completed.
+Fitting 5 folds for each of 2 candidates, totalling 10 fits
+[CV] END max_depth=10, max_features=sqrt, min_samples_split=5, n_estimators=100; total time=  48.0s
+[CV] END max_depth=10, max_features=sqrt, min_samples_split=5, n_estimators=100; total time=  48.1s
+[CV] END max_depth=10, max_features=sqrt, min_samples_split=5, n_estimators=100; total time=  49.2s
+[CV] END max_depth=10, max_features=sqrt, min_samples_split=5, n_estimators=100; total time=  46.8s
+[CV] END max_depth=10, max_features=sqrt, min_samples_split=5, n_estimators=100; total time=  47.1s
+[CV] END max_depth=20, max_features=sqrt, min_samples_split=5, n_estimators=100; total time= 1.3min
+[CV] END max_depth=20, max_features=sqrt, min_samples_split=5, n_estimators=100; total time= 1.3min
+[CV] END max_depth=20, max_features=sqrt, min_samples_split=5, n_estimators=100; total time= 1.3min
+[CV] END max_depth=20, max_features=sqrt, min_samples_split=5, n_estimators=100; total time= 1.3min
+[CV] END max_depth=20, max_features=sqrt, min_samples_split=5, n_estimators=100; total time= 1.3min
+Fitting 5 folds for each of 4 candidates, totalling 20 fits
+/usr/local/lib/python3.12/dist-packages/xgboost/core.py:774: UserWarning: [09:10:09] WARNING: /workspace/src/common/error_msg.cc:62: Falling back to prediction using DMatrix due to mismatched devices. This might lead to higher memory usage and slower performance. XGBoost is running on: cuda:0, while the input data is on: cpu.
+Potential solutions:
+- Use a data structure that matches the device ordinal in the booster.
+- Set the device for booster before call to inplace_predict.
+
+This warning will only be shown once.
+
+  return func(**kwargs)
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8; total time=   2.5s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8; total time=   1.8s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8; total time=   1.8s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8; total time=   1.9s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=100, subsample=0.8; total time=   2.9s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.8; total time=   2.2s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.8; total time=   2.2s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.8; total time=   2.2s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.8; total time=   2.1s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=3, n_estimators=200, subsample=0.8; total time=   2.4s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=0.8; total time=   3.0s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=0.8; total time=   2.0s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=0.8; total time=   2.0s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=0.8; total time=   2.0s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=100, subsample=0.8; total time=   1.9s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.8; total time=   2.5s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.8; total time=   3.5s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.8; total time=   2.4s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.8; total time=   2.4s
+[CV] END colsample_bytree=0.8, gamma=0, learning_rate=0.1, max_depth=5, n_estimators=200, subsample=0.8; total time=   2.5s
+Fitting 5 folds for each of 1 candidates, totalling 5 fits
+[CV] END border_count=32, depth=6, iterations=200, learning_rate=0.1; total time=  14.4s
+[CV] END border_count=32, depth=6, iterations=200, learning_rate=0.1; total time=  14.1s
+[CV] END border_count=32, depth=6, iterations=200, learning_rate=0.1; total time=  13.7s
+[CV] END border_count=32, depth=6, iterations=200, learning_rate=0.1; total time=  13.5s
+[CV] END border_count=32, depth=6, iterations=200, learning_rate=0.1; total time=  15.0s
+
+================ FINAL REPORT ================
+Best Model: Random Forest
+Optimal Threshold Used: 0.3
+Confusion Matrix:
+[[20897  3100]
+ [23038 71764]]
+Recall (Defaults Caught): 0.8708
+F1 Score (Class 0): 0.6152
+==============================================
+Model Training Completed. Best Model Accuracy: 87.08%
+Model Monitoring Completed. Report saved at: artifacts/monitoring_report.txt
