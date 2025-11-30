@@ -52,6 +52,7 @@ class ModelTrainer:
                 "XGBClassifier": XGBClassifier(
                     tree_method='hist',          # Histogram-based (GPU auto-detected with device param)
                     device='cuda:0',             # GPU device (XGBoost 2.0+)
+                    objective='binary:logistic',
                     scale_pos_weight=scale_pos_weight,  # Dynamic class weight
                     n_jobs=-1,
                     random_state=42
@@ -59,6 +60,7 @@ class ModelTrainer:
                 "CatBoost Classifier": CatBoostClassifier(
                     task_type='GPU',             # Explicit GPU usage
                     devices='0',                 # GPU device
+                    loss_function='Logloss',
                     auto_class_weights='Balanced',
                     verbose=0,
                     random_state=42,
@@ -68,25 +70,26 @@ class ModelTrainer:
             
            # --- REAL FAST PARAMS (For 30 min run) ---
             params = {
-                "Random Forest": {
-                    'n_estimators': [100],        # Sirf 100 check karo
-                    'max_depth': [10, 20],        # Deep trees slow hote hain
-                    'min_samples_split': [5],     # Ek value kaafi hai
-                    'max_features': ['sqrt']      # Log2 hata diya
-                },
+                #"Random Forest": {
+                #    'n_estimators': [100],        # Sirf 100 check karo
+                #    'max_depth': [10, 20],        # Deep trees slow hote hain
+                #    'min_samples_split': [5],     # Ek value kaafi hai
+                #    'max_features': ['sqrt']      # Log2 hata diya
+                #},
                 "XGBClassifier": {
                     'learning_rate': [0.1],       # Standard rate
-                    'n_estimators': [100, 200],   # 300 hata diya
-                    'max_depth': [7],          
-                    'subsample': [0.8],           # Fixed
-                    'colsample_bytree': [0.8],    # Fixed
+                    'n_estimators': [300,500],   # 300 hata diya
+                    'max_depth': [5,7,9],          
+                    'subsample': [0.7,0.8],           # overfitting rokne
+                    'colsample_bytree': [0.7,0.8],    # overfitting control
                     'gamma': [0]                  # Fixed
                 },
                 "CatBoost Classifier": {
-                    'depth': [6],
-                    'learning_rate': [0.1],
-                    'iterations': [200],
-                    'border_count': [32]
+                    'depth': [6,8,10],
+                    'learning_rate': [0.05,0.1],
+                    'iterations': [500,800],
+                    'border_count': [32],
+                    'l2_leaf_reg': [1, 3, 5] #Regulariziation
                }
             }
 
