@@ -116,7 +116,7 @@ class ModelTrainer:
 
             # --- CRITICAL: CUSTOM THRESHOLD LOGIC (The "Secret Sauce") ---
             # Hum 0.5 threshold use nahi karenge. Based on our analysis, 0.1 is optimal.
-            OPTIMAL_THRESHOLD = 0.25
+            OPTIMAL_THRESHOLD = 0.30
             
             # 1. Get Probability of Default (Class 0)
             # Assumption: Class 0 is Default, Class 1 is Paid.

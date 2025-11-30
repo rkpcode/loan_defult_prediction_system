@@ -23,7 +23,7 @@ class PredictPipeline:
             # Load Metadata for Threshold
             with open(metadata_path, 'r') as f:
                 metadata = json.load(f)
-            threshold = metadata.get("threshold", 0.1) # Default to 0.1 if not found
+            threshold = metadata.get("threshold", 0.25) # Default to 0.1 if not found
             
             print(f"Loaded Threshold: {threshold}")
             print("After Loading")
