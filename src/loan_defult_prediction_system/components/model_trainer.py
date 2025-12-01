@@ -56,16 +56,7 @@ class ModelTrainer:
                     scale_pos_weight=scale_pos_weight,  # Dynamic class weight
                     n_jobs=-1,
                     random_state=42
-                ),
-                "CatBoost Classifier": CatBoostClassifier(
-                    task_type='GPU',             # Explicit GPU usage
-                    devices='0',                 # GPU device
-                    loss_function='Logloss',
-                    auto_class_weights='Balanced',
-                    verbose=0,
-                    random_state=42,
-                    allow_writing_files=False
-                ),
+                )
             }
             
            # --- REAL FAST PARAMS (For 30 min run) ---
