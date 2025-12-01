@@ -63,14 +63,14 @@ class ModelTrainer:
             params = {
                 "Random Forest": {
                     'n_estimators': [100],        # Sirf 100 check karo
-                    'max_depth': [10 ],        # Deep trees slow hote hain
+                    'max_depth': [10,20,30 ],        # Deep trees slow hote hain
                     'min_samples_split': [5],     # Ek value kaafi hai
                     'max_features': ['sqrt']      # Log2 hata diya
                 },
                 "XGBClassifier": {
                     'learning_rate': [0.1],       # Standard rate
                     'n_estimators': [300,500],   # 300 hata diya
-                    'max_depth': [5,7,9,10],          
+                    'max_depth': [10,20,30],          
                     'subsample': [0.7,0.8],           # overfitting rokne
                     'colsample_bytree': [0.7,0.8],    # overfitting control
                     'gamma': [0]                  # Fixed
