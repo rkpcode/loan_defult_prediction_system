@@ -44,11 +44,21 @@ class PredictPipeline:
             
             # Assuming classes are [0, 1], probs[:, 0] is probability of Default
             prob_default = probs[:, 0]
+            prob_paid_back = probs[:, 1]
             
             # Apply Custom Threshold
             preds = [0 if p > threshold else 1 for p in prob_default]
             
-            return preds
+            # Return both predictions and probabilities
+            results = []
+            for i in range(len(preds)):
+                results.append({
+                    'prediction': int(preds[i]),
+                    'prob_default': float(prob_default[i]),
+                    'prob_paid_back': float(prob_paid_back[i])
+                })
+            
+            return results
         
         except Exception as e:
             raise CustomException(e, sys)

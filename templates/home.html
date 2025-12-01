@@ -126,8 +126,16 @@
             </form>
 
             {% if results is defined %}
-            <div class="mt-4 alert alert-info text-center">
-                <h4>Prediction Result: <strong>{{ results }}</strong></h4>
+            <div class="mt-4">
+                <div class="alert alert-info text-center">
+                    <h4>Prediction Result: <strong>{{ results }}</strong></h4>
+                </div>
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Loan Paid Back Probability</h5>
+                        <h1 class="display-3"><strong>{{ prob_paid_back }}</strong></h1>
+                    </div>
+                </div>
             </div>
             {% endif %}
         </div>

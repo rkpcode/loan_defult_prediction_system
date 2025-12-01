@@ -38,11 +38,20 @@ def predict_datapoint():
         results = predict_pipeline.predict(pred_df)
         print("after Prediction")
         
+        # Extract prediction and probabilities
+        result = results[0]
+        prediction = result['prediction']
+        prob_default = result['prob_default'] * 100  # Convert to percentage
+        prob_paid_back = result['prob_paid_back'] * 100
+        
         # Convert prediction to readable format
         # 0 = Default, 1 = Paid Back
-        prediction_label = "Loan Default" if results[0] == 0 else "Loan Paid Back"
+        prediction_label = "Loan Default" if prediction == 0 else "Loan Paid Back"
         
-        return render_template('home.html', results=prediction_label)
+        return render_template('home.html', 
+                             results=prediction_label,
+                             prob_default=f"{prob_default:.2f}%",
+                             prob_paid_back=f"{prob_paid_back:.2f}%")
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
@@ -61,9 +70,12 @@ def upload_file():
                 
                 results = predict_pipeline.predict(df)
                 
-                df['loan_paid_back'] = results
+                # Extract predictions and probabilities
+                df['prediction'] = [r['prediction'] for r in results]
+                df['loan_paid_back_probability'] = [f"{r['prob_paid_back']}" for r in results]
+                
                 # 1 = Paid Back (Give Loan: YES), 0 = Default (Give Loan: NO)
-                df['Give_Loan'] = df['loan_paid_back'].apply(lambda x: "YES" if x == 1 else "NO")
+                df['Give_Loan'] = df['prediction'].apply(lambda x: "YES" if x == 1 else "NO")
                 
                 # Save the results to a CSV file for download
                 output_file = os.path.join('artifacts', 'prediction_results.csv')
