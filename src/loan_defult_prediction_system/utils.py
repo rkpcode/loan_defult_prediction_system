@@ -71,17 +71,21 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param, scoring='ac
             logging.info(f"Model: {model_name}, Total parameter combinations: {total_combinations}")
 
             # Use RandomizedSearchCV for large search spaces (more efficient for GPU)
+            # Dynamic CV: Use 2 folds if data is small (< 50 samples), else 5
+            cv_folds = 2 if len(X_train) < 50 else 5
+            
             if total_combinations > 50:
                 logging.info(f"Using RandomizedSearchCV for {model_name}")
                 n_iter = min(30, total_combinations)  # Try 30 best combinations
                 rs = RandomizedSearchCV(
                     model, para, 
-                    cv=5,                    # 5-fold CV for better validation
+                    cv=cv_folds,             # Dynamic CV
                     n_iter=n_iter, 
                     n_jobs=1,                # Sequential for GPU models
                     verbose=2,               # Show detailed progress
                     scoring=scoring,
-                    random_state=42
+                    random_state=42,
+                    error_score='raise'      # Raise error to catch issues
                 )
                 rs.fit(X_train, y_train)
                 model.set_params(**rs.best_params_)
@@ -91,10 +95,11 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param, scoring='ac
                 logging.info(f"Using GridSearchCV for {model_name}")
                 gs = GridSearchCV(
                     model, para, 
-                    cv=5,                    # 5-fold CV
+                    cv=cv_folds,             # Dynamic CV
                     n_jobs=1, 
                     verbose=2, 
-                    scoring=scoring
+                    scoring=scoring,
+                    error_score='raise'
                 )
                 gs.fit(X_train, y_train)
                 model.set_params(**gs.best_params_)
