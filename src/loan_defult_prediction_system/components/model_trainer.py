@@ -4,7 +4,7 @@ import numpy as np
 import json
 from dataclasses import dataclass
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import confusion_matrix, f1_score, recall_score, roc_auc_score
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
@@ -46,36 +46,54 @@ class ModelTrainer:
                 "Random Forest": RandomForestClassifier(
                     class_weight='balanced',
                     n_jobs=-1,
-                    random_state=42,
-                    max_features='sqrt'
+                    random_state=42
+                ),
+                "Gradient Boosting": GradientBoostingClassifier(
+                    random_state=42
                 ),
                 "XGBClassifier": XGBClassifier(
-                    tree_method='hist',          # Histogram-based (GPU auto-detected with device param)
-                    device='cuda:0',             # GPU device (XGBoost 2.0+)
+                    tree_method='hist',          # Efficient on CPU/GPU
                     objective='binary:logistic',
                     scale_pos_weight=scale_pos_weight,  # Dynamic class weight
                     n_jobs=-1,
                     random_state=42
+                ),
+                "CatBoost": CatBoostClassifier(
+                    verbose=False,
+                    auto_class_weights='Balanced',
+                    random_state=42
                 )
             }
             
-           # --- REAL FAST PARAMS (For 30 min run) ---
+            # --- COMPREHENSIVE HYPERPARAMETER TUNING ---
             params = {
                 "Random Forest": {
-                    'n_estimators': [100],        # Sirf 100 check karo
-                    'max_depth': [10,20],        # Deep trees slow hote hain
-                    'min_samples_split': [5],     # Ek value kaafi hai
-                    'max_features': ['sqrt']      # Log2 hata diya
+                    'n_estimators': [100, 200, 300],
+                    'max_depth': [10, 20, 30, None],
+                    'min_samples_split': [2, 5, 10],
+                    'min_samples_leaf': [1, 2, 4],
+                    'max_features': ['sqrt', 'log2']
+                },
+                "Gradient Boosting": {
+                    'learning_rate': [0.1, 0.01, 0.05],
+                    'n_estimators': [100, 200, 300],
+                    'subsample': [0.8, 0.9, 1.0],
+                    'max_depth': [3, 5, 7]
                 },
                 "XGBClassifier": {
-                    'learning_rate': [0.1],       # Standard rate
-                    'n_estimators': [300,500],   # 300 hata diya
-                    'max_depth': [20,30],          
-                    'subsample': [0.7,0.8],           # overfitting rokne
-                    'colsample_bytree': [0.7,0.8],    # overfitting control
-                    'gamma': [0]                  # Fixed
+                    'learning_rate': [0.01, 0.05, 0.1, 0.2],
+                    'n_estimators': [100, 300, 500, 1000],
+                    'max_depth': [3, 5, 7, 10],
+                    'subsample': [0.6, 0.8, 1.0],
+                    'colsample_bytree': [0.6, 0.8, 1.0],
+                    'gamma': [0, 0.1, 0.2]
+                },
+                 "CatBoost": {
+                    'depth': [4, 6, 8, 10],
+                    'learning_rate': [0.01, 0.05, 0.1],
+                    'iterations': [100, 500, 1000],
+                    'l2_leaf_reg': [1, 3, 5, 7, 9]
                 }
-                
             }
 
             logging.info("Starting Model Training with Hyperparameter Tuning...")

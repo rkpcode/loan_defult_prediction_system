@@ -3,5 +3,5 @@
 /preprocessor.pkl
 /data_ingestion/
 /raw_data.csv
-/model.pkl
+
 /prediction_results.csv

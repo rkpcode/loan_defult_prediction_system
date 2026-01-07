@@ -114,8 +114,12 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, param, scoring='ac
             elif scoring == 'f1':
                 test_model_score = f1_score(y_test, y_test_pred, pos_label=0)  # F1 for defaulters
             elif scoring == 'roc_auc':
-                # ROC AUC needs probabilities ideally, but using score for now to be safe
-                test_model_score = roc_auc_score(y_test, y_test_pred)
+                # Use probabilities for ROC-AUC
+                if hasattr(model, "predict_proba"):
+                    y_test_pred_proba = model.predict_proba(X_test)[:, 1]
+                    test_model_score = roc_auc_score(y_test, y_test_pred_proba)
+                else:
+                    test_model_score = roc_auc_score(y_test, y_test_pred)
             else:
                 test_model_score = accuracy_score(y_test, y_test_pred)
 

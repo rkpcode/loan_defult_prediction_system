@@ -206,3 +206,11 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+
+# Model artifacts
+*.pkl
+*.joblib
+artifacts/model.pkl
+artifacts/model_metadata.json
+artifacts/
+!artifacts/.gitignore

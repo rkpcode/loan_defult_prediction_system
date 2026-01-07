@@ -10,3 +10,8 @@ xgboost
 catboost
 dagshub
 mlflow
+
+gunicorn
+streamlit
+shap
+matplotlib
