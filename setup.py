@@ -1,5 +1,10 @@
 from setuptools import find_packages, setup
 from typing import List
+import pathlib
+import io
+import os
+
+HERE = pathlib.Path(__file__).parent
 
 HYPEN_E_DOT = '-e .'
 
@@ -20,7 +25,7 @@ def get_requirements(file_path:str)->List[str]:
 setup(
     name='loan_defult_prediction_system',
     version='0.0.1',
-    author='Ranjan Kumar',
+    author='Rahul Kumar pradhan',
     author_email='contactrkp21@gmail.com',
     packages=find_packages(),
     install_requires=get_requirements('requirements.txt')
