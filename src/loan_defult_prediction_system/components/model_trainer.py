@@ -32,7 +32,21 @@ class ModelTrainer:
                 test_array[:, -1],
             )
 
-            # --- GPU-OPTIMIZED MODELS (Enhanced for Accuracy & Class Imbalance) ---
+            # --- GPU-OPTIMIZED MODELS w/ CPU FALLBACK ---
+            # Check for GPU availability (simplistic check using torch or just try-except logic / explicit flag)
+            # Since we might not have torch installed, we can rely on exception handling or just default to CPU 
+            # if we are not in an environment we know has GPU. 
+            # A common way in Colab is to check nvidia-smi, but in python:
+            
+            import subprocess
+            try:
+                subprocess.check_output('nvidia-smi')
+                is_gpu_available = True
+                logging.info("GPU detected via nvidia-smi. Configuring models for GPU.")
+            except Exception:
+                is_gpu_available = False
+                logging.info("GPU NOT detected. Configuring models for CPU.")
+
             # Calculate actual class weights for better imbalance handling
             from sklearn.utils.class_weight import compute_class_weight
             class_weights = compute_class_weight('balanced', 
@@ -41,7 +55,30 @@ class ModelTrainer:
             scale_pos_weight = class_weights[0] / class_weights[1]
             
             logging.info(f"Calculated scale_pos_weight: {scale_pos_weight:.2f}")
+
+            # Define parameters based on device
+            xgb_params = {
+                'objective': 'binary:logistic',
+                'scale_pos_weight': scale_pos_weight,
+                'n_jobs': -1,
+                'random_state': 42
+            }
             
+            cat_params = {
+                'verbose': False,
+                'auto_class_weights': 'Balanced',
+                'random_state': 42
+            }
+
+            if is_gpu_available:
+                xgb_params['tree_method'] = 'hist'
+                xgb_params['device'] = 'cuda'
+                cat_params['task_type'] = 'GPU'
+            else:
+                 xgb_params['tree_method'] = 'hist' # Hist is fast on CPU too
+                 # No device param implies CPU
+                 # No task_type implies CPU for CatBoost
+
             models = {
                 "Random Forest": RandomForestClassifier(
                     class_weight='balanced',
@@ -51,18 +88,8 @@ class ModelTrainer:
                 "Gradient Boosting": GradientBoostingClassifier(
                     random_state=42
                 ),
-                "XGBClassifier": XGBClassifier(
-                    tree_method='hist',          # Efficient on CPU/GPU
-                    objective='binary:logistic',
-                    scale_pos_weight=scale_pos_weight,  # Dynamic class weight
-                    n_jobs=-1,
-                    random_state=42
-                ),
-                "CatBoost": CatBoostClassifier(
-                    verbose=False,
-                    auto_class_weights='Balanced',
-                    random_state=42
-                )
+                "XGBClassifier": XGBClassifier(**xgb_params),
+                "CatBoost": CatBoostClassifier(**cat_params)
             }
             
             # --- COMPREHENSIVE HYPERPARAMETER TUNING ---
