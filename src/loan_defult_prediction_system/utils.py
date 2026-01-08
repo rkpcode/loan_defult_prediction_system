@@ -9,6 +9,49 @@ from dataclasses import dataclass
 from dotenv import load_dotenv
 import pymysql
 import pickle
+import zipfile
+import glob
+from kaggle.api.kaggle_api_extended import KaggleApi
+
+DATASET_SLUG = 'playground-series-s5e11'
+
+def download_data_from_kaggle():
+    try:
+        logging.info(f"Attempting to download dataset: {DATASET_SLUG} from Kaggle")
+        
+        # Check for kaggle.json
+        kaggle_config_path = os.path.join(os.path.expanduser("~"), ".kaggle", "kaggle.json")
+        if not os.path.exists(kaggle_config_path):
+            logging.warning(f"kaggle.json not found at {kaggle_config_path}. Automatic download may fail if not authenticated.")
+
+        api = KaggleApi()
+        api.authenticate()
+        
+        # Download
+        artifacts_dir = "artifacts"
+        os.makedirs(artifacts_dir, exist_ok=True)
+        
+        logging.info("Downloading dataset files...")
+        api.competition_download_files(DATASET_SLUG, path=artifacts_dir, quiet=False)
+        
+        # Unzip
+        logging.info("Unzipping downloaded files...")
+        zip_files = glob.glob(os.path.join(artifacts_dir, "*.zip"))
+        if zip_files:
+            with zipfile.ZipFile(zip_files[0], 'r') as zip_ref:
+                zip_ref.extractall(artifacts_dir)
+            logging.info("Unzip completed.")
+            
+            # Clean up zip file
+            os.remove(zip_files[0])
+            logging.info(f"Removed zip file: {zip_files[0]}")
+        else:
+             logging.warning("No zip file found after download.")
+
+    except Exception as e:
+        logging.error(f"Failed to download data from Kaggle: {e}")
+        # We don't raise here to allow the caller to handle the missing file error if download fails
+        print(f"Warning: Failed to download from Kaggle. Error: {e}")
 
 def read_train_data(sample_size: int = None):
     """
@@ -22,12 +65,21 @@ def read_train_data(sample_size: int = None):
     try:
         # Load from full dataset location
         file_path = "artifacts/data_ingestion/train.csv"
+        fallback_path = os.path.join("artifacts", "train.csv")
+        
+        # Check if files exist, if not, try to download
+        if not os.path.exists(file_path) and not os.path.exists(fallback_path):
+            logging.info("Data file not found. initiating download from Kaggle...")
+            download_data_from_kaggle()
         
         # Fallback to artifacts/train.csv if main path doesn't exist
         if not os.path.exists(file_path):
-            file_path = os.path.join("artifacts", "train.csv")
+            file_path = fallback_path
             logging.warning(f"Primary path not found, using fallback: {file_path}")
         
+        if not os.path.exists(file_path):
+             raise FileNotFoundError(f"Train data not found at {file_path} even after attempted download.")
+
         df = pd.read_csv(file_path)
         logging.info(f"Data loaded from: {file_path} - Total rows: {len(df)}")
         
