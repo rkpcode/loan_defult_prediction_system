@@ -1,0 +1,17 @@
+{
+    "Best Model": "XGBClassifier",
+    "ROC AUC Score": 0.9204715010780042,
+    "Optimal Threshold Used": 0.1,
+    "Confusion Matrix": [
+        [
+            14039,
+            5294
+        ],
+        [
+            5019,
+            70687
+        ]
+    ],
+    "Recall (Defaults Caught)": 0.7262,
+    "F1 Score (Class 0)": 0.7314
+}

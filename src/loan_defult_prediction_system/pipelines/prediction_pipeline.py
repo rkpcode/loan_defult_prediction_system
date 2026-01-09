@@ -12,9 +12,9 @@ class PredictPipeline:
 
     def predict(self, features):
         try:
-            model_path = os.path.join("artifacts", "model.pkl")
+            model_path = os.path.join("artifacts", "xgboost_model.pkl")
             preprocessor_path = os.path.join('artifacts', 'preprocessor.pkl')
-            metadata_path = os.path.join("artifacts", "model_metadata.json")
+            metadata_path = os.path.join("artifacts", "xgboost_model_metadata.json")
 
             print("Before Loading")
             model = load_object(file_path=model_path)

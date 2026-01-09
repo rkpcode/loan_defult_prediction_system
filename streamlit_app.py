@@ -188,51 +188,76 @@ if st.sidebar.button("🚀 Analyze Risk Profile"):
             msg_type(f"**Status: {approval_status}** | Probability: {prob_default*100:.2f}% | Threshold: {risk_threshold:.2f}")
             st.progress(prob_default, text=f"Risk Level {prob_default*100:.1f}%")
             
-            # Explanation (SHAP)
+            # Explanation (Feature Importance)
             st.markdown("---")
             st.subheader("🔍 Decision Transparency (Why this prediction?)")
             try:
-                model_path = os.path.join("artifacts", "model.pkl")
-                preprocessor_path = os.path.join("artifacts", "preprocessor.pkl")
-                
+                model_path = os.path.join("artifacts", "xgboost_model.pkl")
                 model = load_object(model_path)
-                preprocessor = load_object(preprocessor_path)
 
-                # Need to transform input data for SHAP
-                # Note: This is an approximation. SHAP ideally needs the training data for background.
-                # Here we will try to use TreeExplainer which might work without background for XGB components
-                
-                data_scaled = preprocessor.transform(pred_df)
-                
-                # If model is a pipeline validation might fail, assuming model is the final estimator
-                # If model is the full pipeline, we need the step.
-                # Based on previous code, `load_object` returns the object.
-                # Let's assume `model` is the classifier itself as per `training_pipeline.py` standard practice, OR it is the pipeline. 
-                # Checking `predict_pipeline.py` would confirm but let's assume it's the model for now.
-                
-                # Check if model has feature_importances_ (Tree based)
+                # Get feature importances from the model
                 if hasattr(model, 'feature_importances_'):
-                    explainer = shap.TreeExplainer(model)
-                    shap_values = explainer.shap_values(data_scaled)
+                    # Get top features
+                    feature_importance = model.feature_importances_
                     
-                    # Feature names
-                    # If numerical features are standard, we need names.
-                    # Getting feature names from preprocessor is tricky but we can try generic names or mapping if simple
-                    # For now, we plot summary
-                    fig, ax = plt.subplots(figsize=(10, 4))
-                    # shap.summary_plot(shap_values, data_scaled, plot_type="bar", show=False)
-                    # Force plot for single prediction is better
-                    shap.force_plot(explainer.expected_value, shap_values[0,:], data_scaled[0,:], matplotlib=True, show=False)
-                    st.pyplot(fig)
+                    # Create feature names (matching the preprocessing order)
+                    numerical_features = ['Annual Income', 'DTI Ratio', 'Credit Score', 'Loan Amount', 
+                                        'Interest Rate', 'Income/Loan Ratio', 'Total Debt']
                     
-                    st.info("SHAP Force Plot shows features pushing the risk score higher (Red) or lower (Blue).")
+                    # For categorical features, we just show the category names (not all one-hot encoded versions)
+                    categorical_features = ['Gender', 'Marital Status', 'Education', 'Employment', 
+                                          'Loan Purpose', 'Grade/Subgrade']
+                    
+                    # Get top numerical feature importances (first 7 features are numerical after scaling)
+                    num_importances = feature_importance[:7]
+                    
+                    # Create a dataframe for visualization
+                    importance_df = pd.DataFrame({
+                        'Feature': numerical_features,
+                        'Importance': num_importances,
+                        'Your Value': [
+                            f"${input_data['annual_income']:,.0f}",
+                            f"{input_data['debt_to_income_ratio']:.1f}%",
+                            f"{input_data['credit_score']:.0f}",
+                            f"${input_data['loan_amount']:,.0f}",
+                            f"{input_data['interest_rate']:.1f}%",
+                            f"{input_data['annual_income']/input_data['loan_amount']:.2f}",
+                            f"${input_data['debt_to_income_ratio'] * input_data['annual_income']:,.0f}"
+                        ]
+                    }).sort_values('Importance', ascending=False)
+                    
+                    # Create bar chart
+                    fig, ax = plt.subplots(figsize=(10, 5))
+                    bars = ax.barh(importance_df['Feature'], importance_df['Importance'], color='#00ADB5')
+                    ax.set_xlabel('Feature Importance', fontsize=12, color='white')
+                    ax.set_title('Top Features Influencing This Prediction', fontsize=14, color='white', pad=20)
+                    ax.tick_params(colors='white')
+                    ax.spines['bottom'].set_color('white')
+                    ax.spines['left'].set_color('white')
+                    ax.spines['top'].set_visible(False)
+                    ax.spines['right'].set_visible(False)
+                    fig.patch.set_facecolor('#0e1117')
+                    ax.set_facecolor('#0e1117')
+                    
+                    st.pyplot(fig, use_container_width=True)
+                    plt.close(fig)
+                    
+                    # Show feature values table
+                    st.markdown("#### 📋 Your Application Details")
+                    st.dataframe(
+                        importance_df[['Feature', 'Your Value', 'Importance']].head(5),
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                    
+                    st.info("📊 **Feature Importance** shows which factors the model considers most important for this prediction. Higher bars = more influential features.")
                 else:
-                    st.warning("Model explanation not available for this model type without background data.")
+                    st.warning("Model explanation not available for this model type.")
 
             except Exception as e:
-                # Fallback for explainability if SHAP fails due to complex pipeline
-                st.info(f"Feature contribution visualization skipped (SHAP requires raw model access). Risk factors based on raw input: High DTI ({input_data['debt_to_income_ratio']}%) and Credit Score ({input_data['credit_score']}).")
-                # print(e) # Debug
+                # Fallback for explainability if visualization fails
+                st.warning(f"⚠️ Feature importance visualization unavailable.")
+                st.info(f"💡 **Key Risk Factors:**\n- DTI Ratio: {input_data['debt_to_income_ratio']:.1f}%\n- Credit Score: {input_data['credit_score']:.0f}\n- Loan Amount: ${input_data['loan_amount']:,.0f}\n- Annual Income: ${input_data['annual_income']:,.0f}")
 
         except Exception as e:
             st.error(f"An error occurred during prediction: {e}")
