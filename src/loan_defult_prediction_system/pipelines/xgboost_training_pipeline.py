@@ -1,0 +1,43 @@
+import os
+import sys
+from src.loan_defult_prediction_system.exception import CustomException
+from src.loan_defult_prediction_system.logger import logging
+from src.loan_defult_prediction_system.components.data_ingestion import DataIngestion
+from src.loan_defult_prediction_system.components.data_transformation import DataTransformation
+from src.loan_defult_prediction_system.components.xgboost_trainer import XGBoostTrainer
+from src.loan_defult_prediction_system.components.model_monitering import ModelMonitoring
+
+if __name__ == "__main__":
+    try:
+        logging.info(">>>>> XGBoost Training Pipeline Started <<<<<")
+        
+        # 1. Data Ingestion
+        logging.info("Step 1: Data Ingestion")
+        obj = DataIngestion()
+        train_data_path, test_data_path = obj.initiate_data_ingestion()
+        print(f"Data Ingestion Completed. Train path: {train_data_path}, Test path: {test_data_path}")
+
+
+        # 2. Data Transformation
+        logging.info("Step 2: Data Transformation")
+        data_transformation = DataTransformation()
+        train_arr, test_arr, _ = data_transformation.initiate_data_transformation(train_data_path, test_data_path)
+        print("Data Transformation Completed.")
+
+        # 3. Model Training (XGBoost Only)
+        logging.info("Step 3: Model Training (XGBoost Only)")
+        model_trainer = XGBoostTrainer()
+        accuracy = model_trainer.initiate_model_trainer(train_arr, test_arr)
+        print(f"XGBoost Training Completed. Best Model ROC AUC: {accuracy:.4f}")
+        
+        # 4. Model Monitoring (Optional, might fail if it hardcodes model.pkl)
+        # logging.info("Step 4: Model Monitoring")
+        # model_monitoring = ModelMonitoring()
+        # report_path = model_monitoring.initiate_model_monitoring()
+        # print(f"Model Monitoring Completed. Report saved at: {report_path}")
+        
+        logging.info(">>>>> XGBoost Training Pipeline Completed Successfully <<<<<")
+
+    except Exception as e:
+        logging.error("Error in XGBoost Training Pipeline")
+        raise CustomException(e, sys)
